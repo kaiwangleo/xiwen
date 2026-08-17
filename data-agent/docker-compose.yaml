@@ -1,0 +1,76 @@
+services:
+  mysql:
+    image: docker.m.daocloud.io/library/mysql:8.0
+    container_name: data-agent-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: meta
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+      - --init-connect=SET NAMES utf8mb4
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/mysql/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  qdrant:
+    image: docker.m.daocloud.io/qdrant/qdrant:v1.13.2
+    container_name: data-agent-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant-data:/qdrant/storage
+
+  elasticsearch:
+    build:
+      context: ./docker/elasticsearch
+    container_name: data-agent-es
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - cluster.name=data-agent
+    ports:
+      - "9200:9200"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  embedding:
+    build:
+      context: ./docker/embedding
+    container_name: data-agent-embedding
+    restart: unless-stopped
+    environment:
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      MODEL_ID: /models/bge-large-zh-v1.5
+      PORT: 80
+    ports:
+      - "8081:80"
+    volumes:
+      - ./docker/embedding/models:/models:ro
+
+volumes:
+  mysql-data:
+  qdrant-data:
+  es-data:
+  embedding-cache:

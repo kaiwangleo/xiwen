@@ -1,0 +1,8 @@
+.venv/
+__pycache__/
+*.py[cod]
+logs/
+*.log
+.env
+.env.*
+docker/embedding/models/

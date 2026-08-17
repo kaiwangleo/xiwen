@@ -1,0 +1,31 @@
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Runtime / secrets
+logs/
+*.log
+.env
+.env.*
+!.env.example
+
+# Local embedding weights (~1.3GB), do not commit
+data-agent/docker/embedding/models/
+
+# IDE / agent
+.idea/
+.claude/
+.vscode/
+*.swp
+.DS_Store

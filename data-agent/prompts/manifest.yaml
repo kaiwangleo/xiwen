@@ -1,0 +1,36 @@
+prompts:
+  - id: generate_sql
+    file: generate_sql.prompt
+    title: 生成 SQL
+    description: 根据召回并过滤后的表、指标和库信息生成查询 SQL
+    variables: [query, table_infos, metric_infos, date_info, db_info]
+  - id: correct_sql
+    file: correct_sql.prompt
+    title: 校正 SQL
+    description: 按校验错误信息做最小必要修正
+    variables: [query, table_infos, metric_infos, date_info, db_info, sql, error]
+  - id: filter_table_info
+    file: filter_table_info.prompt
+    title: 过滤表
+    description: 丢掉与问题无关的表
+    variables: [query, table_infos]
+  - id: filter_metric_info
+    file: filter_metric_info.prompt
+    title: 过滤指标
+    description: 丢掉与问题无关的指标
+    variables: [query, metric_infos]
+  - id: extend_keywords_for_column_recall
+    file: extend_keywords_for_column_recall.prompt
+    title: 召回字段扩词
+    description: 为字段向量检索扩展关键词
+    variables: [query]
+  - id: extend_keywords_for_metric_recall
+    file: extend_keywords_for_metric_recall.prompt
+    title: 召回指标扩词
+    description: 为指标向量检索扩展关键词
+    variables: [query]
+  - id: extend_keywords_for_value_recall
+    file: extend_keywords_for_value_recall.prompt
+    title: 召回取值扩词
+    description: 为维度取值全文检索扩展关键词
+    variables: [query]

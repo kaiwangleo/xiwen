@@ -1,0 +1,77 @@
+logging:
+  file:
+    enable: true
+    level: INFO
+    path: logs
+    rotation: 10 MB
+    retention: 7 days
+  console:
+    enable: true
+    level: INFO
+db_meta:
+  host: localhost
+  port: 3306
+  user: root
+  password: root
+  database: meta
+db_dw:
+  host: localhost
+  port: 3306
+  user: root
+  password: root
+  database: dw
+qdrant:
+  host: localhost
+  port: 6333
+  embedding_size: 1024
+  collections:
+    column: data-agent-column
+    metric: data-agent-metric
+  search:
+    score_threshold: 0.6
+    limit: 5
+embedding:
+  host: localhost
+  port: 8081
+  model: BAAI/bge-large-zh-v1.5
+  path: /embed
+  timeout: 120
+  batch_size: 10
+es:
+  host: localhost
+  port: 9200
+  index_name: data-agent-value
+llm:
+  model_name: grok-4.6
+  api_key: ''
+  base_url: ''
+  temperature: 0
+  timeout: 120
+knowledge_build:
+  on_error: abort
+  steps:
+    load_config:
+      enabled: true
+    save_tables:
+      enabled: true
+      example_limit: 10
+    index_columns:
+      enabled: true
+      batch_size: 10
+    index_values:
+      enabled: true
+      value_limit: 100000
+    save_metrics:
+      enabled: true
+    index_metrics:
+      enabled: true
+      batch_size: 10
+chart:
+  default: auto
+  thousand_separator: true
+ui:
+  show_sql: true
+  quick_asks:
+  - 统计去年各地区的销售总额
+  - 黄金会员的平均客单价
+  - 零食类商品销量排行
