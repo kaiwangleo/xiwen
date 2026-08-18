@@ -15,6 +15,7 @@ dist/
 dist-ssr/
 coverage/
 *.local
+plugins/dsh-xiwen/lib/
 
 # Runtime / secrets
 logs/
