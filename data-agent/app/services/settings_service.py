@@ -11,8 +11,7 @@ from app.conf.app_config import (
     reload_app_config,
 )
 
-
-SECRET_KEYS = {"password", "api_key"}
+SECRET_KEYS = {"password", "api_key", "auth_token"}
 
 KNOWLEDGE_STEP_ORDER = [
     "load_config",
@@ -78,8 +77,12 @@ def knowledge_warnings(payload: dict | None = None) -> list[str]:
         enabled(step) for step in KNOWLEDGE_STEP_ORDER if step != "load_config"
     ):
         warnings.append("关闭 load_config 后其余步骤读不到语义配置，构建会跳过后续步骤")
-    if not enabled("save_tables") and (enabled("index_columns") or enabled("index_values")):
-        warnings.append("关闭 save_tables 却开启 index_columns / index_values：本轮没有字段数据")
+    if not enabled("save_tables") and (
+        enabled("index_columns") or enabled("index_values")
+    ):
+        warnings.append(
+            "关闭 save_tables 却开启 index_columns / index_values：本轮没有字段数据"
+        )
     if not enabled("save_metrics") and enabled("index_metrics"):
         warnings.append("关闭 save_metrics 却开启 index_metrics：本轮没有指标数据")
     return warnings

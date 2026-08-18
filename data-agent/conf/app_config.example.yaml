@@ -56,6 +56,15 @@ llm:
   temperature: 0
   timeout: 120
 
+api:
+  auth_token: ''
+  max_query_chars: 4000
+  max_request_bytes: 16384
+  query_timeout_seconds: 120
+  sql_timeout_seconds: 30
+  max_result_rows: 200
+  health_timeout_seconds: 5
+
 knowledge_build:
   on_error: abort
   steps:

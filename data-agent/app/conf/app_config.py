@@ -84,6 +84,30 @@ class LLMConfig:
 
 
 @dataclass
+class APIConfig:
+    auth_token: str = ""
+    max_query_chars: int = 4000
+    max_request_bytes: int = 16384
+    query_timeout_seconds: int = 120
+    sql_timeout_seconds: float = 30
+    max_result_rows: int = 200
+    health_timeout_seconds: float = 5
+
+    def __post_init__(self) -> None:
+        positive_fields = {
+            "max_query_chars": self.max_query_chars,
+            "max_request_bytes": self.max_request_bytes,
+            "query_timeout_seconds": self.query_timeout_seconds,
+            "sql_timeout_seconds": self.sql_timeout_seconds,
+            "max_result_rows": self.max_result_rows,
+            "health_timeout_seconds": self.health_timeout_seconds,
+        }
+        for name, value in positive_fields.items():
+            if value <= 0:
+                raise ValueError(f"api.{name} 必须大于 0")
+
+
+@dataclass
 class LoadConfigStep:
     enabled: bool = True
 
@@ -163,6 +187,7 @@ class AppConfig:
     embedding: EmbeddingConfig
     es: ESConfig
     llm: LLMConfig
+    api: APIConfig = field(default_factory=APIConfig)
     knowledge_build: KnowledgeBuildConfig = field(default_factory=KnowledgeBuildConfig)
     chart: ChartConfig = field(default_factory=ChartConfig)
     ui: UIConfig = field(default_factory=UIConfig)

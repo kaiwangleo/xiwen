@@ -19,4 +19,11 @@ dependencies = [
     "pyyaml>=6.0.3",
     "qdrant-client>=1.16.2",
     "sqlalchemy>=2.0.46",
+    "sqlglot>=25",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.25",
 ]
