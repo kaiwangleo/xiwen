@@ -1,0 +1,10 @@
+# Copy the relevant values into your Harness profile patch.
+- insert:
+    - id: xiwen
+      name: '@kaiwangleo/dsh-xiwen'
+      config:
+        baseUrl: 'http://127.0.0.1:8000'
+        # Set this after Bearer authentication is enabled on the Xiwen service.
+        apiToken: 'CHANGE_ME_TO_MATCH_API_AUTH_TOKEN'
+        timeoutMs: 120000
+        maxRows: 200

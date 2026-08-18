@@ -1,3 +1,5 @@
+# Copy this file to app_config.yaml and replace every CHANGE_ME value locally.
+# app_config.yaml is intentionally ignored because the admin API can write secrets to it.
 logging:
   file:
     enable: true
@@ -8,18 +10,21 @@ logging:
   console:
     enable: true
     level: INFO
+
 db_meta:
   host: localhost
   port: 3306
-  user: root
-  password: root
+  user: xiwen_meta
+  password: CHANGE_ME_META_DB_PASSWORD
   database: meta
+
 db_dw:
   host: localhost
   port: 3306
-  user: root
-  password: root
+  user: xiwen_readonly
+  password: CHANGE_ME_READONLY_DB_PASSWORD
   database: dw
+
 qdrant:
   host: localhost
   port: 6333
@@ -30,6 +35,7 @@ qdrant:
   search:
     score_threshold: 0.6
     limit: 5
+
 embedding:
   host: localhost
   port: 8081
@@ -37,16 +43,19 @@ embedding:
   path: /embed
   timeout: 120
   batch_size: 10
+
 es:
   host: localhost
   port: 9200
   index_name: data-agent-value
+
 llm:
-  model_name: grok-4.6
-  api_key: ''
-  base_url: ''
+  model_name: CHANGE_ME_MODEL_NAME
+  api_key: CHANGE_ME_LLM_API_KEY
+  base_url: CHANGE_ME_OPENAI_COMPATIBLE_BASE_URL
   temperature: 0
   timeout: 120
+
 knowledge_build:
   on_error: abort
   steps:
@@ -66,12 +75,14 @@ knowledge_build:
     index_metrics:
       enabled: true
       batch_size: 10
+
 chart:
   default: auto
   thousand_separator: true
+
 ui:
   show_sql: true
   quick_asks:
-  - 统计去年各地区的销售总额
-  - 黄金会员的平均客单价
-  - 零食类商品销量排行
+    - 统计去年各地区的销售总额
+    - 黄金会员的平均客单价
+    - 零食类商品销量排行

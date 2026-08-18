@@ -4,7 +4,12 @@ from typing import Any
 
 from omegaconf import OmegaConf
 
-from app.conf.app_config import app_config, config_file, reload_app_config
+from app.conf.app_config import (
+    app_config,
+    config_file,
+    config_source_file,
+    reload_app_config,
+)
 
 
 SECRET_KEYS = {"password", "api_key"}
@@ -84,7 +89,7 @@ def save_config(payload: dict) -> dict:
     """合并写入 app_config.yaml 并热加载；返回 previous/applied 供连接器 reload。"""
     original = asdict(app_config)
     incoming = _restore_secrets(deepcopy(payload), original)
-    current_file = OmegaConf.load(config_file)
+    current_file = OmegaConf.load(config_source_file())
     merged = OmegaConf.merge(current_file, OmegaConf.create(incoming))
     OmegaConf.save(merged, config_file)
     reload_app_config()

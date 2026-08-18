@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field, fields, is_dataclass
+from pathlib import Path
 
 from omegaconf import OmegaConf
 
-from app.conf.paths import APP_CONFIG_PATH
+from app.conf.paths import APP_CONFIG_EXAMPLE_PATH, APP_CONFIG_PATH
 
 
 @dataclass
@@ -168,11 +169,17 @@ class AppConfig:
 
 
 config_file = APP_CONFIG_PATH
+config_example_file = APP_CONFIG_EXAMPLE_PATH
+
+
+def config_source_file() -> Path:
+    """Prefer the ignored local config and fall back to the committed example."""
+    return config_file if config_file.is_file() else config_example_file
 
 
 def load_app_config() -> AppConfig:
     """从 YAML 加载运行时配置并按 AppConfig 结构补默认值。"""
-    context = OmegaConf.load(config_file)
+    context = OmegaConf.load(config_source_file())
     schema = OmegaConf.structured(AppConfig)
     return OmegaConf.to_object(OmegaConf.merge(schema, context))
 

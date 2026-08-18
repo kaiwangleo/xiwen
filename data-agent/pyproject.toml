@@ -1,7 +1,7 @@
 [project]
 name = "data-agent"
 version = "0.1.0"
-description = "Add your description here"
+description = "Xiwen semantic-layer analytics service for Chinese business questions"
 requires-python = ">=3.12"
 dependencies = [
     "asyncmy>=0.2.11",
