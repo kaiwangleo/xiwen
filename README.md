@@ -7,7 +7,7 @@
 ## 架构
 
 ```text
-Vue 3 工作台 / DeepSeek Harness 插件（开发中）
+Vue 3 工作台 / DeepSeek Harness 插件
                          │ HTTP + SSE
                          ▼
                   FastAPI / LangGraph
@@ -20,7 +20,7 @@ Vue 3 工作台 / DeepSeek Harness 插件（开发中）
                  Embedding + LLM 服务
 ```
 
-DeepSeek Harness 适配层位于 `plugins/dsh-xiwen`，只负责把 `xiwen_query` 工具请求转发给析问服务；它不会安装或托管 Python 后端及其数据依赖。
+DeepSeek Harness 适配层位于 [`plugins/dsh-xiwen`](plugins/dsh-xiwen)，只负责把 `xiwen_query` 工具请求转发给析问服务；它不会安装或托管 Python 后端及其数据依赖。
 
 ## 主要能力
 
@@ -91,6 +91,19 @@ npm run dev
 Vite 开发服务器通常监听 `http://127.0.0.1:5173`，并将 `/api` 转发到后端的 `8000` 端口。
 
 更完整的链路和配置说明见 [`data-agent/docs/技术架构.md`](data-agent/docs/技术架构.md)。
+
+### 4. 连接 DeepSeek Harness
+
+插件尚未发布到 npm。当前可以从本地检出或本地 tarball 安装，并通过独立的 Harness profile 启用：
+
+```bash
+npm --prefix plugins/dsh-xiwen ci
+npm --prefix plugins/dsh-xiwen run build
+dsh plugin --profile xiwen add ./plugins/dsh-xiwen
+dsh --profile xiwen --dump-config
+```
+
+安装、配置、安全边界和卸载方法见 [`plugins/dsh-xiwen/README.md`](plugins/dsh-xiwen/README.md)。
 
 ## 配置示例
 
