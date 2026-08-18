@@ -2,7 +2,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
 from langgraph.runtime import Runtime
 
-from app.agent.context import DataAgentContext
+from app.agent.context import DataAgentContext, raise_if_cancelled
 from app.agent.llm import llm
 from app.agent.progress import emit_progress
 from app.agent.state import DataAgentState
@@ -26,12 +26,16 @@ async def recall_value(state: DataAgentState, runtime: Runtime[DataAgentContext]
 
     try:
         # 使用LLM扩展关键词
-        prompt = PromptTemplate(template=load_prompt("extend_keywords_for_value_recall"), input_variables=["query"])
+        prompt = PromptTemplate(
+            template=load_prompt("extend_keywords_for_value_recall"),
+            input_variables=["query"],
+        )
         output_parser = JsonOutputParser()
 
         chain = prompt | llm | output_parser
 
         result = await chain.ainvoke({"query": query})
+        raise_if_cancelled(runtime.context)
 
         # 使用扩展后的关键词召回字段取值
         values_map: dict[str, ValueInfo] = {}
@@ -39,6 +43,7 @@ async def recall_value(state: DataAgentState, runtime: Runtime[DataAgentContext]
         logger.info(f"召回字段取值扩展关键词：{keywords}")
         for keyword in keywords:
             values: list[ValueInfo] = await value_es_repository.search(keyword)
+            raise_if_cancelled(runtime.context)
             for value in values:
                 value_id = value.id
                 if value_id not in values_map:
@@ -46,9 +51,10 @@ async def recall_value(state: DataAgentState, runtime: Runtime[DataAgentContext]
 
         retrieved_values = list(values_map.values())
 
-        value_detail = "、".join(
-            f"{item.column_id}={item.value}" for item in retrieved_values
-        ) or "无"
+        value_detail = (
+            "、".join(f"{item.column_id}={item.value}" for item in retrieved_values)
+            or "无"
+        )
         emit_progress(
             writer,
             STEP,
@@ -59,8 +65,8 @@ async def recall_value(state: DataAgentState, runtime: Runtime[DataAgentContext]
         )
         logger.info(f"召回字段取值：{list(values_map.keys())}")
 
-        return {'retrieved_values': retrieved_values}
+        return {"retrieved_values": retrieved_values}
     except Exception as e:
         emit_progress(writer, STEP, "error", stack=STACK, desc=DESC)
-        logger.error(f"召回字段取值失败: {str(e)}")
+        logger.error(f"召回字段取值失败: {e!s}")
         raise

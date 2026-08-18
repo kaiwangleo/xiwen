@@ -3,31 +3,25 @@
 import { parseSseStream } from './sse.js'
 import type { JsonValue, XiwenClientConfig, XiwenQueryResult } from './types.js'
 
-
 const MAX_ERROR_MESSAGE_CHARS = 500
 const MAX_PROGRESS_SUMMARY_CHARS = 1000
 
-
 type ProgressStatus = 'running' | 'success' | 'error'
-
 
 interface ProgressState {
   label: string
   status: ProgressStatus
 }
 
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
-
 
 function cancellationReason(signal: AbortSignal): Error {
   return signal.reason instanceof Error
     ? signal.reason
     : new DOMException('The operation was aborted', 'AbortError')
 }
-
 
 function boundRows(
   input: Array<Record<string, JsonValue>>,
@@ -54,7 +48,6 @@ function boundRows(
   return rows
 }
 
-
 function progressMessage(progress: Map<string, ProgressState>): string | null {
   if (progress.size === 0) return null
   const detail = [...progress.values()]
@@ -65,24 +58,17 @@ function progressMessage(progress: Map<string, ProgressState>): string | null {
   return `${message.slice(0, MAX_PROGRESS_SUMMARY_CHARS - 3)}...`
 }
 
-
 function normalizeProgress(
   event: Record<string, unknown>,
   progress: Map<string, ProgressState>,
 ): void {
   const { step, status } = event
-  if (
-    typeof step !== 'string'
-    || !['running', 'success', 'error'].includes(String(status))
-  ) {
+  if (typeof step !== 'string' || !['running', 'success', 'error'].includes(String(status))) {
     throw new Error('Invalid Xiwen progress event')
   }
-  const label = typeof event.desc === 'string' && event.desc.trim()
-    ? event.desc.trim()
-    : step
+  const label = typeof event.desc === 'string' && event.desc.trim() ? event.desc.trim() : step
   progress.set(step, { label, status: status as ProgressStatus })
 }
-
 
 function normalizeResult(
   event: Record<string, unknown>,
@@ -90,12 +76,12 @@ function normalizeResult(
   progress: Map<string, ProgressState>,
 ): XiwenQueryResult {
   if (
-    !Array.isArray(event.data)
-    || typeof event.sql !== 'string'
-    || !Number.isSafeInteger(event.rowCount)
-    || (event.rowCount as number) < 0
-    || event.rowCount !== event.data.length
-    || typeof event.truncated !== 'boolean'
+    !Array.isArray(event.data) ||
+    typeof event.sql !== 'string' ||
+    !Number.isSafeInteger(event.rowCount) ||
+    (event.rowCount as number) < 0 ||
+    event.rowCount !== event.data.length ||
+    typeof event.truncated !== 'boolean'
   ) {
     throw new Error('Invalid Xiwen result event')
   }
@@ -112,7 +98,6 @@ function normalizeResult(
   }
 }
 
-
 function normalizeChat(event: Record<string, unknown>): XiwenQueryResult {
   if (typeof event.message !== 'string') throw new Error('Invalid Xiwen chat event')
   return {
@@ -124,13 +109,11 @@ function normalizeChat(event: Record<string, unknown>): XiwenQueryResult {
   }
 }
 
-
 function cleanErrorText(value: unknown, fallback: string): string {
   if (typeof value !== 'string') return fallback
   const cleaned = value.replace(/[\u0000-\u001f\u007f]+/gu, ' ').trim()
   return cleaned ? cleaned.slice(0, MAX_ERROR_MESSAGE_CHARS) : fallback
 }
-
 
 function errorFromEvent(event: Record<string, unknown>): Error {
   const rawCode = typeof event.code === 'string' ? event.code : ''
@@ -139,18 +122,19 @@ function errorFromEvent(event: Record<string, unknown>): Error {
   return new Error(`Xiwen query failed (${code}): ${message}`)
 }
 
-
 function httpError(status: number): Error {
   if (status === 401 || status === 403) {
     return new Error('Xiwen authentication failed; check the configured apiToken')
   }
   if (status === 413) return new Error('Xiwen rejected the request because it was too large')
-  if (status === 422) return new Error('Xiwen rejected the query; check that it is non-empty and within the configured length limit')
+  if (status === 422)
+    return new Error(
+      'Xiwen rejected the query; check that it is non-empty and within the configured length limit',
+    )
   if (status === 429) return new Error('Xiwen is rate-limiting requests; retry later')
   if (status >= 500) return new Error(`Xiwen service is unavailable (HTTP ${status})`)
   return new Error(`Xiwen request failed (HTTP ${status})`)
 }
-
 
 function validateClientConfig(config: XiwenClientConfig): void {
   if (!Number.isSafeInteger(config.maxRows) || config.maxRows <= 0) {
@@ -163,7 +147,6 @@ function validateClientConfig(config: XiwenClientConfig): void {
     throw new Error('timeoutMs must be a positive integer')
   }
 }
-
 
 /** Query Xiwen and return one bounded canonical result for the DSH tool runtime. */
 export async function queryXiwen(
@@ -188,15 +171,12 @@ export async function queryXiwen(
   if (config.apiToken) headers.authorization = `Bearer ${config.apiToken}`
 
   try {
-    const response = await fetchImpl(
-      `${config.baseUrl.replace(/\/$/u, '')}/api/query`,
-      {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ query }),
-        signal: controller.signal,
-      },
-    )
+    const response = await fetchImpl(`${config.baseUrl.replace(/\/$/u, '')}/api/query`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ query }),
+      signal: controller.signal,
+    })
     if (!response.ok) throw httpError(response.status)
     if (response.body === null) throw new Error('Xiwen response did not include an SSE stream')
     const contentType = response.headers.get('content-type')?.toLowerCase() ?? ''
@@ -210,7 +190,8 @@ export async function queryXiwen(
       if (!isRecord(rawEvent) || typeof rawEvent.type !== 'string') {
         throw new Error('Invalid Xiwen SSE event')
       }
-      if (terminal !== undefined) throw new Error('Xiwen stream included data after its terminal event')
+      if (terminal !== undefined)
+        throw new Error('Xiwen stream included data after its terminal event')
 
       if (rawEvent.type === 'progress') {
         normalizeProgress(rawEvent, progress)

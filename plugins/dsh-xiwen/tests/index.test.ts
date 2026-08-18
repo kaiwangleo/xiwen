@@ -10,9 +10,7 @@ import {
   type Config as XiwenPluginConfig,
 } from '../src/index.js'
 
-
 const encoder = new TextEncoder()
-
 
 function pluginConfig(overrides: Partial<XiwenPluginConfig> = {}): XiwenPluginConfig {
   return {
@@ -25,22 +23,27 @@ function pluginConfig(overrides: Partial<XiwenPluginConfig> = {}): XiwenPluginCo
   }
 }
 
-
 function resultResponse(): Response {
-  return new Response(new ReadableStream<Uint8Array>({
-    start(controller) {
-      controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-        type: 'result',
-        data: [{ total: 3 }],
-        sql: 'SELECT COUNT(*) AS total FROM orders',
-        rowCount: 1,
-        truncated: false,
-      })}\n\n`))
-      controller.close()
-    },
-  }), { headers: { 'content-type': 'text/event-stream' } })
+  return new Response(
+    new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({
+              type: 'result',
+              data: [{ total: 3 }],
+              sql: 'SELECT COUNT(*) AS total FROM orders',
+              rowCount: 1,
+              truncated: false,
+            })}\n\n`,
+          ),
+        )
+        controller.close()
+      },
+    }),
+    { headers: { 'content-type': 'text/event-stream' } },
+  )
 }
-
 
 describe('dsh-xiwen plugin', () => {
   it('exports stable plugin metadata and validated defaults', () => {
@@ -56,12 +59,15 @@ describe('dsh-xiwen plugin', () => {
   })
 
   it('rejects unsafe or malformed service URLs', () => {
-    expect(() => createXiwenTool(pluginConfig({ baseUrl: 'ftp://127.0.0.1' })))
-      .toThrow('baseUrl must use HTTP or HTTPS')
-    expect(() => createXiwenTool(pluginConfig({ baseUrl: 'http://user:secret@127.0.0.1' })))
-      .toThrow('baseUrl must not contain credentials')
-    expect(() => createXiwenTool(pluginConfig({ baseUrl: 'not a URL' })))
-      .toThrow('baseUrl must be a valid HTTP or HTTPS URL')
+    expect(() => createXiwenTool(pluginConfig({ baseUrl: 'ftp://127.0.0.1' }))).toThrow(
+      'baseUrl must use HTTP or HTTPS',
+    )
+    expect(() =>
+      createXiwenTool(pluginConfig({ baseUrl: 'http://user:secret@127.0.0.1' })),
+    ).toThrow('baseUrl must not contain credentials')
+    expect(() => createXiwenTool(pluginConfig({ baseUrl: 'not a URL' }))).toThrow(
+      'baseUrl must be a valid HTTP or HTTPS URL',
+    )
   })
 
   it('registers the xiwen_query tool with the Harness tool service', () => {
@@ -88,10 +94,7 @@ describe('dsh-xiwen plugin', () => {
     const tool = createXiwenTool(pluginConfig(), fetchMock)
     const signal = new AbortController().signal
 
-    const value = await tool.execute(
-      { query: '  统计订单数量  ' },
-      { signal } as never,
-    )
+    const value = await tool.execute({ query: '  统计订单数量  ' }, { signal } as never)
 
     expect(value).toEqual({
       sql: 'SELECT COUNT(*) AS total FROM orders',
@@ -108,10 +111,9 @@ describe('dsh-xiwen plugin', () => {
     const fetchMock = vi.fn<typeof fetch>()
     const tool = createXiwenTool(pluginConfig(), fetchMock)
 
-    await expect(tool.execute(
-      { query: '   ' },
-      { signal: new AbortController().signal } as never,
-    )).rejects.toThrow('Xiwen query must not be empty')
+    await expect(
+      tool.execute({ query: '   ' }, { signal: new AbortController().signal } as never),
+    ).rejects.toThrow('Xiwen query must not be empty')
     expect(fetchMock).not.toHaveBeenCalled()
   })
 })

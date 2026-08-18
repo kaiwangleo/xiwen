@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import { parseSseStream } from '../src/sse.js'
 
-
 function streamOf(chunks: string[]): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder()
   return new ReadableStream({
@@ -13,13 +12,11 @@ function streamOf(chunks: string[]): ReadableStream<Uint8Array> {
   })
 }
 
-
 async function collect(chunks: string[]): Promise<unknown[]> {
   const events: unknown[] = []
   for await (const event of parseSseStream(streamOf(chunks))) events.push(event)
   return events
 }
-
 
 describe('parseSseStream', () => {
   it('parses JSON split across arbitrary network chunks', async () => {

@@ -7,7 +7,6 @@ export type JsonValue =
   | JsonValue[]
   | { [key: string]: JsonValue }
 
-
 export interface XiwenClientConfig {
   baseUrl: string
   apiToken?: string
@@ -16,7 +15,6 @@ export interface XiwenClientConfig {
   maxResultChars: number
   includeProgressSummary: boolean
 }
-
 
 export interface XiwenQueryResult {
   sql: string | null

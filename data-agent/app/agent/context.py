@@ -1,4 +1,5 @@
-from typing import TypedDict
+import asyncio
+from typing import NotRequired, TypedDict
 
 from app.clients.embedding_client_manager import LocalEmbeddingClient
 from app.repositories.es.value_es_repository import ValueESRepository
@@ -15,3 +16,10 @@ class DataAgentContext(TypedDict):
     metric_qdrant_repository: MetricQdrantRepository
     meta_mysql_repository: MetaMySQLRepository
     dw_mysql_repository: DWMySQLRepository
+    cancel_event: NotRequired[asyncio.Event]
+
+
+def raise_if_cancelled(context: DataAgentContext) -> None:
+    cancel_event = context.get("cancel_event")
+    if cancel_event is not None and cancel_event.is_set():
+        raise asyncio.CancelledError

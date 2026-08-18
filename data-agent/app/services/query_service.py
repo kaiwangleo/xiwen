@@ -1,5 +1,7 @@
 import asyncio
 import json
+from contextlib import aclosing
+from typing import Any
 
 from app.agent.context import DataAgentContext
 from app.agent.graph import graph
@@ -20,6 +22,26 @@ from app.repositories.qdrant.metric_qdrant_repository import MetricQdrantReposit
 def encode_sse(event: SSEEvent | dict) -> str:
     """Serialize one complete SSE data event with a stable frame boundary."""
     return f"data: {json.dumps(event, ensure_ascii=False, default=str)}\n\n"
+
+
+async def wait_for_task_cleanup(task: asyncio.Task) -> None:
+    """Wait for a cancelled LangGraph task and its deferred exit tasks."""
+    cleanup_futures: list[asyncio.Future] = []
+    try:
+        await task
+    except asyncio.CancelledError as exc:
+        cleanup_futures.extend(
+            arg for arg in exc.args if isinstance(arg, asyncio.Future)
+        )
+
+    while cleanup_futures:
+        cleanup = cleanup_futures.pop()
+        try:
+            await asyncio.shield(cleanup)
+        except asyncio.CancelledError as exc:
+            cleanup_futures.extend(
+                arg for arg in exc.args if isinstance(arg, asyncio.Future)
+            )
 
 
 class QueryService:
@@ -48,6 +70,7 @@ class QueryService:
             metric_qdrant_repository=self.metric_qdrant_repository,
             meta_mysql_repository=self.meta_mysql_repository,
             dw_mysql_repository=self.dw_mysql_repository,
+            cancel_event=asyncio.Event(),
         )
         if not is_data_query(query):
             chat_event: ChatEvent = {"type": "chat", "message": chat_reply()}
@@ -55,12 +78,37 @@ class QueryService:
             return
 
         state = DataAgentState(query=query)
+        queue: asyncio.Queue[tuple[str, Any]] = asyncio.Queue()
+        done = object()
+
+        async def run_graph() -> None:
+            try:
+                async with aclosing(
+                    graph.astream(input=state, context=context, stream_mode="custom")
+                ) as stream:
+                    async for chunk in stream:
+                        await queue.put(("chunk", chunk))
+            except Exception as exc:  # noqa: BLE001 - forwarded to public error boundary
+                await queue.put(("error", exc))
+            finally:
+                await queue.put(("done", done))
+
+        graph_task = asyncio.create_task(run_graph())
         try:
-            async with asyncio.timeout(app_config.api.query_timeout_seconds):
-                async for chunk in graph.astream(
-                    input=state, context=context, stream_mode="custom"
-                ):
-                    yield encode_sse(chunk)
+            try:
+                async with asyncio.timeout(app_config.api.query_timeout_seconds):
+                    while True:
+                        kind, item = await queue.get()
+                        if kind == "done":
+                            break
+                        if kind == "error":
+                            raise item
+                        yield encode_sse(item)
+            finally:
+                if not graph_task.done():
+                    context["cancel_event"].set()
+                    graph_task.cancel()
+                await wait_for_task_cleanup(graph_task)
         except asyncio.CancelledError:
             logger.info("问数请求已取消")
             raise

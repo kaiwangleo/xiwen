@@ -73,6 +73,92 @@ class CancellableGraph:
             self.cleaned.set()
 
 
+class BackgroundGraphStream:
+    def __init__(self) -> None:
+        self.started = asyncio.Event()
+        self.cleaned = asyncio.Event()
+        self.worker: asyncio.Task | None = None
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        if self.worker is None:
+            self.worker = asyncio.create_task(self._work())
+            await self.started.wait()
+        await asyncio.Future()
+
+    async def _work(self) -> None:
+        try:
+            self.started.set()
+            await asyncio.sleep(10)
+        finally:
+            self.cleaned.set()
+
+    async def aclose(self) -> None:
+        if self.worker is None:
+            return
+        self.worker.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await self.worker
+
+
+class BackgroundGraph:
+    def __init__(self) -> None:
+        self.stream = BackgroundGraphStream()
+
+    def astream(self, **_kwargs):
+        return self.stream
+
+
+class CloseWhileYieldedGraphStream:
+    def __init__(self) -> None:
+        self.started = asyncio.Event()
+        self.cleaned = asyncio.Event()
+        self.worker: asyncio.Task | None = None
+        self.yielded = False
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        if not self.yielded:
+            self.yielded = True
+            self.worker = asyncio.create_task(asyncio.sleep(10))
+            return {"type": "progress", "step": "检索", "status": "running"}
+
+        try:
+            self.started.set()
+            await asyncio.Future()
+        except asyncio.CancelledError as exc:
+            exit_task = asyncio.create_task(self._cleanup())
+            exc.args = (*exc.args, exit_task)
+            raise
+
+    async def _cleanup(self) -> None:
+        await asyncio.sleep(0.05)
+        assert self.worker is not None
+        self.worker.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await self.worker
+        self.cleaned.set()
+
+    async def aclose(self) -> None:
+        # Mirrors a stream whose close does not own parallel work. The active
+        # __anext__ call must be cancelled to quiesce it.
+        return None
+
+
+class CloseWhileYieldedGraph:
+    def __init__(self) -> None:
+        self.stream = CloseWhileYieldedGraphStream()
+        self.context = None
+
+    def astream(self, **kwargs):
+        self.context = kwargs["context"]
+        return self.stream
+
+
 @pytest.mark.asyncio
 async def test_query_service_returns_stable_timeout_error(monkeypatch) -> None:
     monkeypatch.setattr(query_service_module, "graph", SlowGraph())
@@ -139,3 +225,40 @@ async def test_query_service_propagates_cancellation(monkeypatch) -> None:
     with pytest.raises(asyncio.CancelledError):
         await task
     await asyncio.wait_for(graph.cleaned.wait(), timeout=1)
+
+
+@pytest.mark.asyncio
+async def test_query_service_closes_graph_owned_background_work(monkeypatch) -> None:
+    graph = BackgroundGraph()
+    monkeypatch.setattr(query_service_module, "graph", graph)
+    monkeypatch.setattr(app_config.api, "query_timeout_seconds", 30)
+
+    async def consume() -> None:
+        async for _chunk in build_service().query("统计销售额"):
+            pass
+
+    task = asyncio.create_task(consume())
+    await graph.stream.started.wait()
+    task.cancel()
+
+    with pytest.raises(asyncio.CancelledError):
+        await task
+    await asyncio.wait_for(graph.stream.cleaned.wait(), timeout=1)
+
+
+@pytest.mark.asyncio
+async def test_query_service_cancels_graph_task_when_closed_at_yield(
+    monkeypatch,
+) -> None:
+    graph = CloseWhileYieldedGraph()
+    monkeypatch.setattr(query_service_module, "graph", graph)
+    monkeypatch.setattr(app_config.api, "query_timeout_seconds", 30)
+
+    response = build_service().query("统计销售额")
+    assert parse_sse(await anext(response))["type"] == "progress"
+    await graph.stream.started.wait()
+
+    await response.aclose()
+
+    assert graph.stream.cleaned.is_set()
+    assert graph.context["cancel_event"].is_set()

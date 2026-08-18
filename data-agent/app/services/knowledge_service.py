@@ -50,7 +50,9 @@ class KnowledgeService:
             )
             table_infos.append(table_info)
 
-            column_types: dict[str, str] = await self.dw_mysql_repository.get_column_types(table.name)
+            column_types: dict[
+                str, str
+            ] = await self.dw_mysql_repository.get_column_types(table.name)
             for column in table.columns:
                 column_values: list = await self.dw_mysql_repository.get_column_values(
                     table.name, column.name, example_limit
@@ -97,7 +99,11 @@ class KnowledgeService:
             )
             for alias in column_info.alias:
                 points.append(
-                    {"id": uuid.uuid4(), "embedding_text": alias, "payload": column_info}
+                    {
+                        "id": uuid.uuid4(),
+                        "embedding_text": alias,
+                        "payload": column_info,
+                    }
                 )
         embedding_texts = [point["embedding_text"] for point in points]
         embeddings = []
@@ -196,7 +202,11 @@ class KnowledgeService:
             )
             for alias in metric_info.alias:
                 points.append(
-                    {"id": uuid.uuid4(), "embedding_text": alias, "payload": metric_info}
+                    {
+                        "id": uuid.uuid4(),
+                        "embedding_text": alias,
+                        "payload": metric_info,
+                    }
                 )
 
         ids = [point["id"] for point in points]
@@ -242,6 +252,9 @@ class KnowledgeService:
 
         async def do_load_config(_cfg):
             data = await load_meta_config(self.meta_mysql_repository.session, seed=True)
+            # A SELECT starts an implicit SQLAlchemy transaction. End that read
+            # transaction before the later save steps open explicit transactions.
+            await self.meta_mysql_repository.session.commit()
             ctx["meta_config"] = to_meta_config(data)
             tables = len(data.get("tables") or [])
             metrics = len(data.get("metrics") or [])

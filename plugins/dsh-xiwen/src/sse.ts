@@ -17,7 +17,6 @@ function parseEventBlock(block: string): unknown | undefined {
   }
 }
 
-
 /** Yield each JSON value from an SSE byte stream without assuming chunk boundaries. */
 export async function* parseSseStream(
   stream: ReadableStream<Uint8Array>,

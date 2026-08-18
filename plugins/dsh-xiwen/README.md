@@ -6,6 +6,12 @@ The plugin registers one model-facing tool, `xiwen_query`. It sends a business q
 
 > This package has not been published to npm yet. Install it from a local checkout or a locally built tarball until a release is available.
 
+## Verified Xiwen result
+
+![Xiwen workbench showing a completed regional sales query](docs/xiwen-workbench.png)
+
+This end-to-end result was captured with the real Xiwen service, MySQL, Qdrant, Elasticsearch, and Embedding containers. A deterministic local OpenAI-compatible mock supplied the LLM responses; no external model service was used for this verification.
+
 ## Architecture and responsibilities
 
 ```text
@@ -141,28 +147,26 @@ Use xiwen_query to answer: 统计 2025 年各地区的销售总额
 The bundled patch defaults to the loopback Xiwen service. To override it, add an `xiwen` row to the profile's `cordis.patch.yml`:
 
 ```yaml
-- insert:
-    - id: xiwen
-      name: '@kaiwangleo/dsh-xiwen'
-      config:
-        baseUrl: 'http://127.0.0.1:8000'
-        apiToken: 'REPLACE_WITH_THE_BACKEND_API_AUTH_TOKEN'
-        timeoutMs: 120000
-        maxRows: 200
-        maxResultChars: 50000
-        includeProgressSummary: false
+- id: xiwen
+  config:
+    baseUrl: 'http://127.0.0.1:8000'
+    apiToken: 'REPLACE_WITH_THE_BACKEND_API_AUTH_TOKEN'
+    timeoutMs: 120000
+    maxRows: 200
+    maxResultChars: 50000
+    includeProgressSummary: false
 ```
 
 Do not commit a real `apiToken`. Omit it when the local backend has no token configured.
 
-| Setting | Default | Meaning |
-|---|---:|---|
-| `baseUrl` | `http://127.0.0.1:8000` | Xiwen service root. Only HTTP and HTTPS URLs without embedded credentials, query strings, or fragments are accepted. |
-| `apiToken` | unset | Optional Bearer token matching `api.auth_token` in the backend configuration. |
-| `timeoutMs` | `120000` | Whole-request timeout, including SSE consumption. |
-| `maxRows` | `200` | Maximum rows returned to the model; accepted range is 1–10,000. |
-| `maxResultChars` | `50000` | Maximum serialized row characters returned to the model; accepted range is 1,000–1,000,000. |
-| `includeProgressSummary` | `false` | When enabled, include the final state of observed progress steps in `message` for result events. |
+| Setting                  |                 Default | Meaning                                                                                                              |
+| ------------------------ | ----------------------: | -------------------------------------------------------------------------------------------------------------------- |
+| `baseUrl`                | `http://127.0.0.1:8000` | Xiwen service root. Only HTTP and HTTPS URLs without embedded credentials, query strings, or fragments are accepted. |
+| `apiToken`               |                   unset | Optional Bearer token matching `api.auth_token` in the backend configuration.                                        |
+| `timeoutMs`              |                `120000` | Whole-request timeout, including SSE consumption.                                                                    |
+| `maxRows`                |                   `200` | Maximum rows returned to the model; accepted range is 1–10,000.                                                      |
+| `maxResultChars`         |                 `50000` | Maximum serialized row characters returned to the model; accepted range is 1,000–1,000,000.                          |
+| `includeProgressSummary` |                 `false` | When enabled, include the final state of observed progress steps in `message` for result events.                     |
 
 Invalid configuration fails when the plugin loads. A trailing slash in `baseUrl` is accepted; the adapter appends `/api/query` exactly once.
 

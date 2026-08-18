@@ -2,7 +2,7 @@ from langchain_core.output_parsers import JsonOutputParser
 from langchain_core.prompts import PromptTemplate
 from langgraph.runtime import Runtime
 
-from app.agent.context import DataAgentContext
+from app.agent.context import DataAgentContext, raise_if_cancelled
 from app.agent.llm import llm
 from app.agent.progress import emit_progress
 from app.agent.state import DataAgentState
@@ -36,6 +36,7 @@ async def recall_column(state: DataAgentState, runtime: Runtime[DataAgentContext
         chain = prompt | llm | output_parser
 
         result = await chain.ainvoke({"query": query})
+        raise_if_cancelled(runtime.context)
 
         # 使用扩展后的关键词召回字段信息
         retrieved_columns_map: dict[str, ColumnInfo] = {}
@@ -44,9 +45,11 @@ async def recall_column(state: DataAgentState, runtime: Runtime[DataAgentContext
         logger.info(f"召回字段信息扩展关键词：{keywords}")
         for keyword in keywords:
             embedding = await embedding_client.aembed_query(keyword)
+            raise_if_cancelled(runtime.context)
             payloads: list[ColumnInfo] = await column_qdrant_repository.search(
                 embedding
             )
+            raise_if_cancelled(runtime.context)
             for payload in payloads:
                 column_id = payload.id
                 if column_id not in retrieved_columns_map:
@@ -69,5 +72,5 @@ async def recall_column(state: DataAgentState, runtime: Runtime[DataAgentContext
         return {"retrieved_columns": retrieved_columns}
     except Exception as e:
         emit_progress(writer, STEP, "error", stack=STACK, desc=DESC)
-        logger.error(f"召回字段信息失败: {str(e)}")
+        logger.error(f"召回字段信息失败: {e!s}")
         raise

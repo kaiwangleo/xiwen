@@ -7,17 +7,14 @@ import Schema from '@deepseek-ai/schemastery'
 import { queryXiwen } from './client.js'
 import type { XiwenClientConfig } from './types.js'
 
-
 const DEFAULT_BASE_URL = 'http://127.0.0.1:8000'
 const DEFAULT_TIMEOUT_MS = 120_000
 const DEFAULT_MAX_ROWS = 200
 const DEFAULT_MAX_RESULT_CHARS = 50_000
 const MAX_TIMER_DELAY_MS = 2_147_483_647
 
-
 export const name = 'dsh-xiwen'
 export const inject = ['tools']
-
 
 /** Deployment-specific settings for the Xiwen tool. */
 export interface Config {
@@ -29,7 +26,6 @@ export interface Config {
   includeProgressSummary: boolean
 }
 
-
 /** Runtime configuration validated by Cordis before the plugin loads. */
 export const Config: Schema<Config> = Schema.object({
   baseUrl: Schema.string()
@@ -37,11 +33,7 @@ export const Config: Schema<Config> = Schema.object({
     .pattern(/^https?:\/\/\S+$/u)
     .default(DEFAULT_BASE_URL),
   apiToken: Schema.string().role('secret'),
-  timeoutMs: Schema.number()
-    .step(1)
-    .min(1)
-    .max(MAX_TIMER_DELAY_MS)
-    .default(DEFAULT_TIMEOUT_MS),
+  timeoutMs: Schema.number().step(1).min(1).max(MAX_TIMER_DELAY_MS).default(DEFAULT_TIMEOUT_MS),
   maxRows: Schema.number().step(1).min(1).max(10_000).default(DEFAULT_MAX_ROWS),
   maxResultChars: Schema.number()
     .step(1)
@@ -50,7 +42,6 @@ export const Config: Schema<Config> = Schema.object({
     .default(DEFAULT_MAX_RESULT_CHARS),
   includeProgressSummary: Schema.boolean().default(false),
 })
-
 
 function clientConfig(config: Config): XiwenClientConfig {
   const baseUrl = config.baseUrl.trim()
@@ -85,7 +76,6 @@ function clientConfig(config: Config): XiwenClientConfig {
   }
 }
 
-
 const QUERY_OUTPUT_SCHEMA = {
   type: 'object',
   additionalProperties: false,
@@ -108,22 +98,20 @@ const QUERY_OUTPUT_SCHEMA = {
   },
 } as const
 
-
 /** Create the registered tool; the fetch seam keeps network behavior testable. */
-export function createXiwenTool(
-  config: Config,
-  fetchImpl: typeof fetch = fetch,
-): ToolDefinition {
+export function createXiwenTool(config: Config, fetchImpl: typeof fetch = fetch): ToolDefinition {
   const resolved = clientConfig(config)
 
   return defineTool({
     name: 'xiwen_query',
-    description: 'Answer structured business analytics questions through the Xiwen semantic layer. Use it for questions that require curated table, column, metric, or enumerated-value knowledge and a read-only analytical query.',
+    description:
+      'Answer structured business analytics questions through the Xiwen semantic layer. Use it for questions that require curated table, column, metric, or enumerated-value knowledge and a read-only analytical query.',
     parameters: {
       query: {
         type: 'string',
         required: true,
-        description: 'A non-empty business question, preferably with the desired metric, dimensions, filters, and time range.',
+        description:
+          'A non-empty business question, preferably with the desired metric, dimensions, filters, and time range.',
       },
     },
     output: {
@@ -138,11 +126,9 @@ export function createXiwenTool(
   })
 }
 
-
 /** Register the Xiwen tool after Cordis provides the Harness tool service. */
 export function apply(ctx: Context, config: Config): void {
   ctx.tools.register(createXiwenTool(config))
 }
-
 
 export type { JsonValue, XiwenClientConfig, XiwenQueryResult } from './types.js'
