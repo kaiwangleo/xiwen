@@ -1,5 +1,3 @@
-from typing import Optional
-
 import httpx
 
 from app.conf.app_config import EmbeddingConfig, app_config
@@ -25,10 +23,15 @@ class LocalEmbeddingClient:
     async def aembed_query(self, text: str) -> list[float]:
         return (await self.aembed_documents([text]))[0]
 
+    async def health(self) -> None:
+        """Raise when the embedding service health endpoint is unavailable."""
+        response = await self._client.get(f"{self.base_url}/health")
+        response.raise_for_status()
+
 
 class EmbeddingClientManager:
     def __init__(self, config: EmbeddingConfig):
-        self.client: Optional[LocalEmbeddingClient] = None
+        self.client: LocalEmbeddingClient | None = None
         self.config = config
 
     def _get_url(self):

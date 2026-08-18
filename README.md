@@ -55,10 +55,13 @@ docs/                项目计划与补充文档
 
 ```bash
 cd data-agent
+cp .env.example .env
 cp conf/app_config.example.yaml conf/app_config.yaml
 ```
 
-至少需要配置 `llm.model_name`、`llm.base_url` 和 `llm.api_key`。示例配置中的占位密码不能用于生产环境；在完成认证、TLS 和网络访问控制加固前，请勿把服务暴露到不受信任的网络。
+`.env` 为 Docker Compose 提供本地 MySQL 凭据，`app_config.yaml` 中的元数据库和只读数仓账号必须与其保持一致。MySQL 初始化脚本只会在新数据卷首次创建时配置 `xiwen_meta` 和 `xiwen_readonly`；已有数据卷需要手动创建这两个账号，或在备份数据后主动重建。
+
+至少需要配置 `llm.model_name`、`llm.base_url` 和 `llm.api_key`。远程部署还应设置非空的 `api.auth_token`。示例配置中的占位密码不能用于生产环境；应用层认证不能替代 TLS 和网络访问控制。
 
 Embedding 容器默认从以下目录读取模型，模型权重不会进入 Git：
 

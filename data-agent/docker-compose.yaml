@@ -4,8 +4,12 @@ services:
     container_name: data-agent-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${XI_WEN_MYSQL_ROOT_PASSWORD:-xiwen-root-local-only}
       MYSQL_DATABASE: meta
+      MYSQL_USER: ${XI_WEN_META_USER:-xiwen_meta}
+      MYSQL_PASSWORD: ${XI_WEN_META_PASSWORD:-xiwen-meta-local-only}
+      XI_WEN_DW_USER: ${XI_WEN_DW_USER:-xiwen_readonly}
+      XI_WEN_DW_PASSWORD: ${XI_WEN_DW_PASSWORD:-xiwen-readonly-local-only}
       TZ: Asia/Shanghai
     ports:
       - "3306:3306"
@@ -18,7 +22,7 @@ services:
       - mysql-data:/var/lib/mysql
       - ./docker/mysql/init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$${MYSQL_ROOT_PASSWORD}\" mysqladmin ping -h 127.0.0.1 -uroot --silent"]
       interval: 5s
       timeout: 5s
       retries: 30
