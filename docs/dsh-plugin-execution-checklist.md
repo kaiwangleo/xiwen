@@ -249,18 +249,40 @@ plugins/dsh-xiwen/
 - [x] 确定首个版本号，例如 `0.1.0`。
 - [x] 检查发布包的许可证、README、入口和类型声明。
 - [x] 优先发布预构建 npm 包，避免 Git 安装所需的构建授权。
-- [ ] 在全新 profile 中从 npm 重新安装验证。
-- [ ] 创建 GitHub Release。
-- [ ] 如不发布 npm，将预构建 `.tgz` 附加到 GitHub Release。
-- [ ] 记录准确的构建和验证命令及结果。
+- [x] 在全新 profile 中从 npm 重新安装验证。
+- [x] 创建 GitHub Release。
+- [x] 如不发布 npm，将预构建 `.tgz` 附加到 GitHub Release。（不适用：已发布 npm 包。）
+- [x] 记录准确的构建和验证命令及结果。
 
 阶段 7 发布准备（2026-08-18）：
 
 - 首个版本确定为 `0.1.0`；补齐 npm 的 repository、homepage、bugs、keywords 元数据，并在插件包内包含独立的 MIT `LICENSE`。
 - Prettier、类型检查、23 项测试、ESM 构建和 `npm publish --dry-run --access public` 均通过。
 - 实际 tarball 包含 21 个发布文件，SHA-256 为 `bbb3de34e622626c78beecf07671591ce0473b6c10ffcfeda39ce19b834185e2`；已安装到全新的 `xiwen-release` profile，`--dump-config` 成功加载 `xiwen` bundle。
-- npm registry 查询 `@kaiwangleo/dsh-xiwen` 返回 404，但 `npm whoami` 返回 `ENEEDAUTH`；完成真实发布前需要用户登录 npm，发布后才能执行“从 npm 全新安装”验证。
-- GitHub 仓库仍为 private，当前开发分支尚未推送，且尚无 tag；推送、公开仓库、创建 `v0.1.0` tag/Release 和 `npm publish` 均等待单独确认。
+- `@kaiwangleo/dsh-xiwen@0.1.0` 已于 2026-08-19 02:29:59 UTC 发布到 npm registry；registry 返回的 tarball 为 `https://registry.npmjs.org/@kaiwangleo/dsh-xiwen/-/dsh-xiwen-0.1.0.tgz`。
+- 已创建全新 Harness `0.1.0-rc.7` profile `xiwen-npm-010-e2e`，从 npm 固定安装 `@kaiwangleo/dsh-xiwen@0.1.0`；`--dump-config` 成功加载 `xiwen` bundle，默认配置指向 `http://127.0.0.1:8000`。安装过程仅报告 peer dependency 提示，不影响配置加载。
+- npm 安装后的插件已通过 Windows 本机 Harness Web 与真实 Xiwen 服务完成电商数仓查询：返回华东 5,200、华南 5,000、华中 4,700、西南 3,600、华北 1,400，总销售额 19,900；同会话追问正确识别最高地区为华东、最低地区为华北。
+- 开发分支 `feat/dsh-xiwen-plugin` 已推送到 `origin`。annotated tag `v0.1.0` 指向发布提交 `9232da1`；GitHub Release [`dsh-xiwen v0.1.0`](https://github.com/kaiwangleo/xiwen/releases/tag/v0.1.0) 已于 2026-08-19 04:54:19 UTC 发布。
+
+阶段 7 使用的准确命令：
+
+```sh
+cd plugins/dsh-xiwen
+npm ci
+npm run format:check
+npm run typecheck
+npm test
+npm run build
+npm publish --dry-run --access public
+npm view @kaiwangleo/dsh-xiwen version dist.tarball dist.integrity time --json
+dsh plugin --profile xiwen-npm-010-e2e add @kaiwangleo/dsh-xiwen@0.1.0
+dsh --profile xiwen-npm-010-e2e --dump-config
+git tag -a v0.1.0 9232da114f82995b996fffba1542996a0a2a9937 -m "Release dsh-xiwen 0.1.0"
+git push origin refs/tags/v0.1.0
+gh release create v0.1.0 --repo kaiwangleo/xiwen --title "dsh-xiwen v0.1.0" --notes-file <release-notes.md>
+```
+
+验证结果：Prettier、TypeScript、23 项测试、ESM 构建、发布包检查、npm registry 查询、全新 profile 安装、bundle 配置加载、tag 推送和 GitHub Release 发布均通过。
 
 ## 阶段 8：提交到 `awesome-dsh-plugin`
 
