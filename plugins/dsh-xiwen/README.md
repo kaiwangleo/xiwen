@@ -216,4 +216,4 @@ Removing the plugin does not stop or delete the Xiwen backend, databases, Docker
 
 ## License
 
-[MIT](../../LICENSE)
+[MIT](LICENSE)

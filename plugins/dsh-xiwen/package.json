@@ -2,6 +2,22 @@
   "name": "@kaiwangleo/dsh-xiwen",
   "version": "0.1.0",
   "description": "Semantic-layer analytics tool for DeepSeek Harness backed by the Xiwen service",
+  "keywords": [
+    "deepseek-harness",
+    "dsh-plugin",
+    "semantic-layer",
+    "text-to-sql",
+    "data-agent"
+  ],
+  "homepage": "https://github.com/kaiwangleo/xiwen/tree/master/plugins/dsh-xiwen#readme",
+  "bugs": {
+    "url": "https://github.com/kaiwangleo/xiwen/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaiwangleo/xiwen.git",
+    "directory": "plugins/dsh-xiwen"
+  },
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -17,6 +33,7 @@
     "lib/**",
     "cordis.patch.yml",
     "docs/xiwen-workbench.png",
+    "LICENSE",
     "README.md"
   ],
   "license": "MIT",

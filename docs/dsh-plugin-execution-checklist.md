@@ -246,13 +246,21 @@ plugins/dsh-xiwen/
 
 ## 阶段 7：发布插件
 
-- [ ] 确定首个版本号，例如 `0.1.0`。
-- [ ] 检查发布包的许可证、README、入口和类型声明。
-- [ ] 优先发布预构建 npm 包，避免 Git 安装所需的构建授权。
+- [x] 确定首个版本号，例如 `0.1.0`。
+- [x] 检查发布包的许可证、README、入口和类型声明。
+- [x] 优先发布预构建 npm 包，避免 Git 安装所需的构建授权。
 - [ ] 在全新 profile 中从 npm 重新安装验证。
 - [ ] 创建 GitHub Release。
 - [ ] 如不发布 npm，将预构建 `.tgz` 附加到 GitHub Release。
 - [ ] 记录准确的构建和验证命令及结果。
+
+阶段 7 发布准备（2026-08-18）：
+
+- 首个版本确定为 `0.1.0`；补齐 npm 的 repository、homepage、bugs、keywords 元数据，并在插件包内包含独立的 MIT `LICENSE`。
+- Prettier、类型检查、23 项测试、ESM 构建和 `npm publish --dry-run --access public` 均通过。
+- 实际 tarball 包含 21 个发布文件，SHA-256 为 `bbb3de34e622626c78beecf07671591ce0473b6c10ffcfeda39ce19b834185e2`；已安装到全新的 `xiwen-release` profile，`--dump-config` 成功加载 `xiwen` bundle。
+- npm registry 查询 `@kaiwangleo/dsh-xiwen` 返回 404，但 `npm whoami` 返回 `ENEEDAUTH`；完成真实发布前需要用户登录 npm，发布后才能执行“从 npm 全新安装”验证。
+- GitHub 仓库仍为 private，当前开发分支尚未推送，且尚无 tag；推送、公开仓库、创建 `v0.1.0` tag/Release 和 `npm publish` 均等待单独确认。
 
 ## 阶段 8：提交到 `awesome-dsh-plugin`
 
