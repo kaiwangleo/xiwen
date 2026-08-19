@@ -94,13 +94,19 @@ Vite 开发服务器通常监听 `http://127.0.0.1:5173`，并将 `/api` 转发�
 
 ### 4. 连接 DeepSeek Harness
 
-插件尚未发布到 npm。当前可以从本地检出或本地 tarball 安装，并通过独立的 Harness profile 启用：
+插件 `0.1.0` 已发布到 npm，也可以从本地检出或本地 tarball 安装，并通过独立的 Harness profile 启用：
+
+```bash
+dsh plugin --profile xiwen add @kaiwangleo/dsh-xiwen@0.1.0
+dsh --profile xiwen --dump-config
+```
+
+本地检出安装仍可使用：
 
 ```bash
 npm --prefix plugins/dsh-xiwen ci
 npm --prefix plugins/dsh-xiwen run build
 dsh plugin --profile xiwen add ./plugins/dsh-xiwen
-dsh --profile xiwen --dump-config
 ```
 
 安装、配置、安全边界和卸载方法见 [`plugins/dsh-xiwen/README.md`](plugins/dsh-xiwen/README.md)。

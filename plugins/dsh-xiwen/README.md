@@ -4,7 +4,7 @@
 
 The plugin registers one model-facing tool, `xiwen_query`. It sends a business question to a separately deployed Xiwen service, consumes the JSON-over-SSE response, and returns bounded structured data to Harness.
 
-> This package has not been published to npm yet. Install it from a local checkout or a locally built tarball until a release is available.
+> Version `0.1.0` is published on npm as [`@kaiwangleo/dsh-xiwen`](https://www.npmjs.com/package/@kaiwangleo/dsh-xiwen).
 
 ## Verified Xiwen result
 
@@ -115,13 +115,21 @@ dsh plugin --profile xiwen add ./plugins/dsh-xiwen
 
 ### Local tarball
 
-To exercise the same package boundary used by a future registry release:
+To install the exact packaged artifact without using the registry:
 
 ```bash
 cd plugins/dsh-xiwen
 npm ci
 npm pack
 dsh plugin --profile xiwen add ./kaiwangleo-dsh-xiwen-0.1.0.tgz
+```
+
+### npm registry
+
+Install the published release directly from npm:
+
+```bash
+dsh plugin --profile xiwen add @kaiwangleo/dsh-xiwen@0.1.0
 ```
 
 Verify that Harness loaded the bundle layer:
