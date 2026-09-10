@@ -36,7 +36,7 @@ DeepSeek Harness 适配层位于 [`plugins/dsh-xiwen`](plugins/dsh-xiwen)，只�
 data-agent/          Python 3.12+ / FastAPI 后端
 data-agent-fronted/  Vue 3 / Vite 工作台（保留历史目录名）
 plugins/dsh-xiwen/   DeepSeek Harness 插件适配层
-docs/                项目计划与补充文档
+data-agent/docs/     技术架构与启动说明
 ```
 
 ## 本地启动
